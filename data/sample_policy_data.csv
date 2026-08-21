@@ -1,0 +1,5 @@
+policy_name,category,current_benefit,proposed_benefit,current_beneficiaries,proposed_beneficiaries,duration_years
+Higher Education Scholarship,Education,10000,15000,200000,220000,1
+Public Transport Fare Reduction,Transport,10,7,500000,650000,1
+Healthcare Coverage Expansion,Healthcare,3000,5000,300000,400000,1
+Skill Development Subsidy,Employment & Skill Development,5000,8000,100000,150000,1

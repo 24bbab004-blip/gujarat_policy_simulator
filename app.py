@@ -41,6 +41,10 @@ input,textarea,[data-baseweb="select"] span,[data-baseweb="select"] input{color:
 /* High-contrast values inside Streamlit's mobile dark form controls. */
 [data-baseweb="select"] > div,[data-testid="stNumberInput"] [data-baseweb="input"],[data-testid="stTextInput"] [data-baseweb="input"]{background:#252630!important;border-color:#3a3c4b!important}
 [data-baseweb="select"] *,[data-testid="stNumberInput"] input,[data-testid="stTextInput"] input{color:#ffffff!important;-webkit-text-fill-color:#ffffff!important;opacity:1!important}
+/* Consistent readable controls for mobile: map filters, simulation inputs and uploads. */
+div[data-baseweb="select"],div[data-baseweb="select"] > div,div[data-baseweb="input"],div[data-baseweb="input"] > div{background:#ffffff!important;border-color:#9cbac7!important}
+div[data-baseweb="select"] *,div[data-baseweb="input"] *,div[data-baseweb="select"] input,div[data-baseweb="input"] input{color:#103f5a!important;-webkit-text-fill-color:#103f5a!important;opacity:1!important}
+div[data-baseweb="select"] svg{fill:#103f5a!important}[data-testid="stFileUploader"] button,[data-testid="stFileUploader"] button *{background:#e5f3f4!important;color:#103f5a!important;border-color:#82bcb7!important}
 </style>""", unsafe_allow_html=True)
 
 @st.cache_data

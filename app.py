@@ -38,6 +38,9 @@ input,textarea,[data-baseweb="select"] span,[data-baseweb="select"] input{color:
   .hero{padding:1.5rem 1.05rem}.hero h1{font-size:1.85rem!important}.hero h3{font-size:1rem!important}
   [data-testid="stSidebar"]{min-width:0}.stMarkdown p{font-size:.95rem}
 }
+/* High-contrast values inside Streamlit's mobile dark form controls. */
+[data-baseweb="select"] > div,[data-testid="stNumberInput"] [data-baseweb="input"],[data-testid="stTextInput"] [data-baseweb="input"]{background:#252630!important;border-color:#3a3c4b!important}
+[data-baseweb="select"] *,[data-testid="stNumberInput"] input,[data-testid="stTextInput"] input{color:#ffffff!important;-webkit-text-fill-color:#ffffff!important;opacity:1!important}
 </style>""", unsafe_allow_html=True)
 
 @st.cache_data

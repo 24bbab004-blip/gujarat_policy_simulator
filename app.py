@@ -68,6 +68,16 @@ def run(inp):
 def demo_input(name):
     rows=pd.read_csv(ROOT/'data'/'sample_policy_data.csv'); r=rows[rows.policy_name==name].iloc[0]
     return PolicyInput(name, r.category, districts().district.tolist(), float(r.current_benefit),float(r.proposed_benefit),int(r.current_beneficiaries),int(r.proposed_beneficiaries),3,4,float(r.duration_years))
+def stage_simulation(inp):
+    """Load a saved/demo scenario into the wizard before its widgets are drawn."""
+    st.session_state['active']=(inp,)+run(inp)
+    st.session_state.update({
+        'simulation_category': inp.category, 'current_benefit': float(inp.current_benefit),
+        'proposed_benefit': int(inp.proposed_benefit), 'current_people': int(inp.current_beneficiaries),
+        'proposed_people': int(inp.proposed_beneficiaries), 'current_threshold': float(inp.current_threshold),
+        'proposed_threshold': float(inp.proposed_threshold), 'duration': float(inp.duration_years),
+        'scenario_name': inp.name, 'simulation_districts': inp.districts,
+    })
 def show_results(inp,result,risk,eff):
     f,b,im=result['financial'],result['beneficiaries'],result['impact']
     st.subheader("Simulation results")
@@ -96,17 +106,22 @@ def show_results(inp,result,risk,eff):
 def simulation_page():
     st.title("New simulation")
     st.caption("All bundled district data is **Demo/Synthetic Data**.")
-    category=st.selectbox("1. Select policy category",list(CATEGORY_CONFIG)); benefit_label, person_label, _=CATEGORY_CONFIG[category]
+    if 'simulation_category' not in st.session_state:
+        active=st.session_state.get('active')
+        if active: stage_simulation(active[0])
+        else:
+            st.session_state.update({'simulation_category':'Education','current_benefit':10000.0,'proposed_benefit':15000,'current_people':200000,'proposed_people':220000,'current_threshold':3.0,'proposed_threshold':4.0,'duration':1.0,'scenario_name':'Education policy scenario','simulation_districts':districts().district.tolist()})
+    category=st.selectbox("1. Select policy category",list(CATEGORY_CONFIG),key='simulation_category'); benefit_label, person_label, _=CATEGORY_CONFIG[category]
     geography=st.radio("2. Select geography",["Gujarat-wide","Select districts"],horizontal=True)
-    names=districts().district.tolist() if geography=="Gujarat-wide" else st.multiselect("Districts",districts().district.tolist(),default=["Ahmedabad","Surat"])
+    names=districts().district.tolist() if geography=="Gujarat-wide" else st.multiselect("Districts",districts().district.tolist(),default=st.session_state.get('simulation_districts',["Ahmedabad","Surat"]),key='district_picker')
     if not names: st.error("Select at least one district."); return
     st.markdown("### 3–4. Define policy values")
     a,b=st.columns(2)
     with a:
-        st.markdown("**Current policy**"); current_benefit=st.number_input("Current "+benefit_label,min_value=0.0,value=10000.0,step=500.0); current_people=st.number_input("Current "+person_label,min_value=1,value=200000,step=1000); current_threshold=st.number_input("Current eligibility threshold (₹ lakh)",min_value=0.0,value=3.0,step=.5)
+        st.markdown("**Current policy**"); current_benefit=st.number_input("Current "+benefit_label,min_value=0.0,step=500.0,key='current_benefit'); current_people=st.number_input("Current "+person_label,min_value=1,step=1000,key='current_people'); current_threshold=st.number_input("Current eligibility threshold (₹ lakh)",min_value=0.0,step=.5,key='current_threshold')
     with b:
-        st.markdown("**Proposed policy / What-if controls**"); proposed_benefit=st.slider("Proposed "+benefit_label,0,50000,15000,500); proposed_people=st.slider("Proposed "+person_label,1000,1000000,220000,1000); proposed_threshold=st.slider("Proposed eligibility threshold (₹ lakh)",.0,10.0,4.0,.5)
-    duration=st.slider("Policy duration (years)",.5,5.0,1.0,.5); name=st.text_input("Scenario name",f"{category} policy scenario")
+        st.markdown("**Proposed policy / What-if controls**"); proposed_benefit=st.slider("Proposed "+benefit_label,0,50000,step=500,key='proposed_benefit'); proposed_people=st.slider("Proposed "+person_label,1000,1000000,step=1000,key='proposed_people'); proposed_threshold=st.slider("Proposed eligibility threshold (₹ lakh)",.0,10.0,step=.5,key='proposed_threshold')
+    duration=st.slider("Policy duration (years)",.5,5.0,step=.5,key='duration'); name=st.text_input("Scenario name",key='scenario_name')
     inp=PolicyInput(name,category,names,current_benefit,proposed_benefit,current_people,proposed_people,current_threshold,proposed_threshold,duration)
     if st.button("Run simulation",type="primary",use_container_width=True): st.session_state['active']=(inp,)+run(inp)
     if 'active' in st.session_state:
@@ -124,7 +139,7 @@ def dashboard():
             icon={'Higher Education Scholarship':'🎓','Public Transport Fare Reduction':'🚌','Healthcare Coverage Expansion':'🩺','Skill Development Subsidy':'🛠️'}[name]
             st.markdown(f"<div class='demo-card'><div class='tag'>READY-TO-RUN SCENARIO</div><h3>{icon} {name}</h3><p>Open, adjust the policy controls and compare the estimated trade-offs.</p></div>",unsafe_allow_html=True)
             if st.button("Run",key=name):
-                inp=demo_input(name); st.session_state['active']=(inp,)+run(inp); st.session_state['page']='New Simulation'; st.rerun()
+                inp=demo_input(name); stage_simulation(inp); st.session_state['page']='New Simulation'; st.rerun()
     st.markdown("<br><p class='section-kicker'>Decision pathway</p><h2>From public spending to public value</h2>",unsafe_allow_html=True)
     features=st.columns(4)
     cards=[('💰','Cost & budget','See current cost, proposed cost, additional expenditure and a scenario range.'),('👥','Reach & beneficiaries','Understand who may be covered and how beneficiary reach changes.'),('🗺️','District intelligence','Compare synthetic district-level capacity, impact, efficiency and risk.'),('⚠️','Risk & trade-offs','Flag budget pressure, workload and delivery capacity before action.')]
@@ -139,7 +154,7 @@ def library():
     pick=st.selectbox("Open or delete scenario",df.id,format_func=lambda x: df[df.id==x].name.iloc[0])
     col1,col2=st.columns(2)
     if col1.button("Open selected"):
-        row=df[df.id==pick].iloc[0]; payload=json.loads(row.payload); inp=PolicyInput(**payload); st.session_state['active']=(inp,)+run(inp); st.session_state['page']='New Simulation'; st.rerun()
+        row=df[df.id==pick].iloc[0]; payload=json.loads(row.payload); inp=PolicyInput(**payload); stage_simulation(inp); st.session_state['page']='New Simulation'; st.rerun()
     if col2.button("Delete selected"):
         con=db(); con.execute("DELETE FROM scenarios WHERE id=?",(int(pick),)); con.commit(); con.close(); st.rerun()
 

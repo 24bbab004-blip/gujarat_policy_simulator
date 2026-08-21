@@ -124,7 +124,7 @@ def dashboard():
             icon={'Higher Education Scholarship':'🎓','Public Transport Fare Reduction':'🚌','Healthcare Coverage Expansion':'🩺','Skill Development Subsidy':'🛠️'}[name]
             st.markdown(f"<div class='demo-card'><div class='tag'>READY-TO-RUN SCENARIO</div><h3>{icon} {name}</h3><p>Open, adjust the policy controls and compare the estimated trade-offs.</p></div>",unsafe_allow_html=True)
             if st.button("Run",key=name):
-                inp=demo_input(name); st.session_state['active']=(inp,)+run(inp); st.session_state['page']='New Simulation'; st.session_state['nav_page']='New Simulation'; st.rerun()
+                inp=demo_input(name); st.session_state['active']=(inp,)+run(inp); st.session_state['page']='New Simulation'; st.rerun()
     st.markdown("<br><p class='section-kicker'>Decision pathway</p><h2>From public spending to public value</h2>",unsafe_allow_html=True)
     features=st.columns(4)
     cards=[('💰','Cost & budget','See current cost, proposed cost, additional expenditure and a scenario range.'),('👥','Reach & beneficiaries','Understand who may be covered and how beneficiary reach changes.'),('🗺️','District intelligence','Compare synthetic district-level capacity, impact, efficiency and risk.'),('⚠️','Risk & trade-offs','Flag budget pressure, workload and delivery capacity before action.')]
@@ -139,7 +139,7 @@ def library():
     pick=st.selectbox("Open or delete scenario",df.id,format_func=lambda x: df[df.id==x].name.iloc[0])
     col1,col2=st.columns(2)
     if col1.button("Open selected"):
-        row=df[df.id==pick].iloc[0]; payload=json.loads(row.payload); inp=PolicyInput(**payload); st.session_state['active']=(inp,)+run(inp); st.session_state['page']='New Simulation'; st.session_state['nav_page']='New Simulation'; st.rerun()
+        row=df[df.id==pick].iloc[0]; payload=json.loads(row.payload); inp=PolicyInput(**payload); st.session_state['active']=(inp,)+run(inp); st.session_state['page']='New Simulation'; st.rerun()
     if col2.button("Delete selected"):
         con=db(); con.execute("DELETE FROM scenarios WHERE id=?",(int(pick),)); con.commit(); con.close(); st.rerun()
 
@@ -196,6 +196,9 @@ def reports():
 PAGES={'Dashboard':dashboard,'New Simulation':simulation_page,'Policy Scenarios':library,'Compare Policies':comparison,'Gujarat Map':map_page,'Analytics':analytics,'Reports':reports,'Data Sources':data_sources,'About':lambda: st.markdown("## About\nA transparent local decision-support prototype for Gujarat policy exploration. It intentionally avoids official branding and claims of predictive certainty.")}
 if 'page' not in st.session_state: st.session_state['page']='Dashboard'
 if 'nav_page' not in st.session_state: st.session_state['nav_page']=st.session_state['page']
+# Programmatic navigation (for example, a demo card's Run button) is synced
+# before the sidebar widget is created; Streamlit forbids changing it afterwards.
+if st.session_state['nav_page'] != st.session_state['page']: st.session_state['nav_page']=st.session_state['page']
 def change_page(): st.session_state['page']=st.session_state['nav_page']
 with st.sidebar:
     st.markdown("<div class='brand'><div class='brand-mark'></div><div><div class='brand-title'>Gujarat Policy<br>Simulator</div><div class='brand-sub'>DECISION INTELLIGENCE</div></div></div>",unsafe_allow_html=True)
